@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finviz iOS">
+    <title>Finviz iOS 27 Edition</title>
+    <style>
+        /* Variables de diseño iOS 27 */
+        :root {
+            --bg-color: #000000;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --green-gradient: linear-gradient(135deg, #34C759, #248A3D);
+            --red-gradient: linear-gradient(135deg, #FF3B30, #B82720);
+            --gray-gradient: linear-gradient(135deg, #3a3a3c, #1c1c1e);
+            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            /* Soportar el Dynamic Island y áreas seguras */
+            padding-top: env(safe-area-inset-top, 54px);
+            padding-bottom: env(safe-area-inset-bottom, 34px);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            overflow-x: hidden;
+        }
+
+        /* Contenedor principal imitando el ancho del iPhone 16 Pro Max */
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 16px;
+        }
+
+        /* Header / Buscador */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #ffffff, #8e8e93);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin-left: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+        }
+        
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Tarjetas de Índices */
+        .indices-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .index-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .index-name {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .index-value {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .index-change {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .text-green { color: #34C759; }
+        .text-red { color: #FF3B30; }
+
+        /* Mapa de calor (Heatmap) clásico de Finviz */
+        .heatmap-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: 100px 100px;
+            gap: 6px;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .map-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+        }
+
+        .map-block.large {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .ticker {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .large .ticker { font-size: 32px; }
+
+        .percent {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .large .percent { font-size: 18px; }
+
+        .bg-green { background: var(--green-gradient); }
+        .bg-red { background: var(--red-gradient); }
+        .bg-gray { background: var(--gray-gradient); }
+
+        /* Lista de Acciones / Screener Mini */
+        .list-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding: 0 8px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-ticker {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .item-company {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .item-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .item-price {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .item-badge {
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo">FINVIZ</div>
+        <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar ticker...">
+        </div>
+    </header>
+
+    <div class="indices-grid">
+        <div class="index-card">
+            <span class="index-name">S&P 500</span>
+            <span class="index-value">5,147.21</span>
+            <span class="index-change text-green">+1.02%</span>
+        </div>
+        <div class="index-card">
+            <span class="index-name">NASDAQ</span>
+            <span class="index-value">16,156.3</span>
+            <span class="index-change text-green">+1.45%</span>
+        </div>
+        <div class="index-card">
+            <span class="index-name">DOW JONES</span>
+            <span class="index-value">38,714.7</span>
+            <span class="index-change text-red">-0.11%</span>
+        </div>
+    </div>
+
+    <div class="heatmap-section">
+        <div class="section-title">S&P 500 Heatmap</div>
+        <div class="heatmap-grid">
+            <div class="map-block large bg-green">
+                <span class="ticker">NVDA</span>
+                <span class="percent">+4.25%</span>
+            </div>
+            <div class="map-block bg-red">
+                <span class="ticker">AAPL</span>
+                <span class="percent">-1.12%</span>
+            </div>
+            <div class="map-block bg-green">
+                <span class="ticker">MSFT</span>
+                <span class="percent">+0.89%</span>
+            </div>
+            <div class="map-block bg-gray">
+                <span class="ticker">GOOG</span>
+                <span class="percent">0.00%</span>
+            </div>
+            <div class="map-block bg-green">
+                <span class="ticker">META</span>
+                <span class="percent">+2.14%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="list-section">
+        <div class="list-header">
+            <span>Ticker</span>
+            <span>Price / Change</span>
+        </div>
+        
+        <div class="list-item">
+            <div class="item-left">
+                <span class="item-ticker">SMCI</span>
+                <span class="item-company">Super Micro Computer</span>
+            </div>
+            <div class="item-right">
+                <span class="item-price">$1,142.50</span>
+                <span class="item-badge bg-green">+12.4%</span>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <div class="item-left">
+                <span class="item-ticker">ARM</span>
+                <span class="item-company">Arm Holdings</span>
+            </div>
+            <div class="item-right">
+                <span class="item-price">$129.21</span>
+                <span class="item-badge bg-green">+6.1%</span>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <div class="item-left">
+                <span class="item-ticker">TSLA</span>
+                <span class="item-company">Tesla Inc.</span>
+            </div>
+            <div class="item-right">
+                <span class="item-price">$175.34</span>
+                <span class="item-badge bg-red">-3.2%</span>
+            </div>
+        </div>
+        
+        <div class="list-item">
+            <div class="item-left">
+                <span class="item-ticker">AMD</span>
+                <span class="item-company">Advanced Micro Dev</span>
+            </div>
+            <div class="item-right">
+                <span class="item-price">$198.40</span>
+                <span class="item-badge bg-green">+2.8%</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
